@@ -18,27 +18,27 @@ guitars = ['sounds/guitar1.wav',
            'sounds/guitar4.wav',
            'sounds/guitar5.wav']
 
+pins = [25, 24, 18, 22]
+
 pygame.mixer.init()
 sounds = [pygame.mixer.Sound(g) for g in guitars]
-#for s in sounds:
-#    s.play()
-#    time.sleep(0.5)
-
-#time.sleep(2)
 
 gpio.setmode(gpio.BCM)
-gpio.setup(25, gpio.IN)
+for pin in pins:
+    gpio.setup(pin, gpio.IN)
 
-last_switch = gpio.LOW
+last_states = [gpio.input(p) for p in pins]
+these_states = list(last_states)
 
 while True:
-    this_switch = gpio.input(25)
-    logger.debug("This: {0}, Last: {1}".format(this_switch, last_switch))
-    if this_switch and not last_switch:
-        sounds[0].play()
-        last_switch = this_switch
-        logger.info("Started playing")
-    if not this_switch and last_switch:
-        sounds[0].stop()
-        last_switch = this_switch
-        logger.info("Stopped playing")
+    these_states = [gpio.input(p) for p in pins]
+    logger.debug("These: {0}, Last: {1}".format(these_states, last_states))
+    for i in range(len(pins)):
+        if these_states[i] and not last_states[i]:
+            sounds[i].play()
+            last_states[i] = these_states[i]
+            logger.info("Started playing {0}".format(i))
+        if not these_states[i] and last_states[i]:
+            sounds[i].stop()
+            last_states[i] = these_states[i]
+            logger.info("Stopped playing {0}".format(i))
