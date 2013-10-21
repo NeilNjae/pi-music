@@ -1,6 +1,5 @@
 import pygame
 import RPi.GPIO as gpio
-import time
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,6 +10,9 @@ logger.addHandler(loggerFileHandler)
 logger.setLevel(logging.WARNING)
 logger.setLevel(logging.INFO)
 
+gpio.setmode(gpio.BCM)
+pins = [25, 24, 18, 22]
+# pins = [25]
 
 guitars = ['sounds/guitar1.wav',
            'sounds/guitar2.wav',
@@ -19,19 +21,18 @@ guitars = ['sounds/guitar1.wav',
            'sounds/guitar5.wav']
 
 pygame.mixer.init()
-sounds = [pygame.mixer.Sound(g) for g in guitars]
+
+sounds = {}
+for pin, wav in zip(pins, guitars):
+    sounds[pin] = pygame.mixer.Sound(wav)
 
 def handle_sound(pin):
     if not gpio.input(pin):
-        sounds[pins.index(pin)].play()
+        sounds[pin].play()
         logger.info("Started playing {0}".format(pins.index(pin)))
     else:
-        sounds[pins.index(pin)].stop()
+        sounds[pin].stop()
         logger.info("Stopped playing {0}".format(pins.index(pin)))
-
-gpio.setmode(gpio.BCM)
-pins = [25, 24, 18, 22]
-# pins = [25]
 
 for pin in pins:
     gpio.setup(pin, gpio.IN)
